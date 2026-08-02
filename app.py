@@ -1,12 +1,16 @@
-from flask import Flask, render_template, redirect
+from flask import Flask, render_template, redirect, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Length
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "your-secret-key-here"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///contacts.db"
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 db = SQLAlchemy(app)
 
 class Contact(db.Model):
@@ -35,7 +39,6 @@ def home():
 
 @app.route("/delete", methods=["POST"])
 def delete_contact():
-    from flask import request
     name = request.form["name"]
     contact = Contact.query.filter_by(name=name).first()
     if contact:

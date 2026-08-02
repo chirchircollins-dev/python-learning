@@ -1,7 +1,11 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, redirect
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired, Length
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = "your-secret-key-here"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///contacts.db"
 db = SQLAlchemy(app)
 
@@ -10,25 +14,28 @@ class Contact(db.Model):
     name = db.Column(db.String(100), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
 
+class ContactForm(FlaskForm):
+    name = StringField("Name", validators=[DataRequired(), Length(min=2, max=100)])
+    phone_number = StringField("Phone Number", validators=[DataRequired(), Length(min=10, max=20)])
+    submit = SubmitField("Add Contact")
+
 with app.app_context():
     db.create_all()
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def home():
+    form = ContactForm()
+    if form.validate_on_submit():
+        new_contact = Contact(name=form.name.data, phone_number=form.phone_number.data)
+        db.session.add(new_contact)
+        db.session.commit()
+        return redirect("/")
     contacts = Contact.query.all()
-    return render_template("index.html", contacts=contacts)
-
-@app.route("/add", methods=["POST"])
-def add_contact():
-    name = request.form["name"]
-    phone_number = request.form["phone_number"]
-    new_contact = Contact(name=name, phone_number=phone_number)
-    db.session.add(new_contact)
-    db.session.commit()
-    return redirect("/")
+    return render_template("index.html", contacts=contacts, form=form)
 
 @app.route("/delete", methods=["POST"])
 def delete_contact():
+    from flask import request
     name = request.form["name"]
     contact = Contact.query.filter_by(name=name).first()
     if contact:

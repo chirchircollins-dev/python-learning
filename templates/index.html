@@ -13,15 +13,17 @@
         {{ contact.name }} - {{ contact.phone_number }}
         <form action="/delete" method="POST" style="display:inline">
             <input type="hidden" name="name" value="{{ contact.name }}">
+            {{ form.hidden_tag() }}
             <button type="submit">🗑️ Delete</button>
         </form>
     </li>
     {% endfor %}
     <h2>Add New Contact</h2>
-    <form action="/add" method="POST">
-        <input type="text" name="name" placeholder="Enter name" required>
-        <input type="number" name="phone_number" placeholder="Enter phone number" required>
-        <button type="submit">Add Contact</button>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.name(placeholder="Enter name") }}
+        {{ form.phone_number(placeholder="Enter phone number") }}
+        {{ form.submit() }}
     </form>
 </body>
 </html>
